@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusPlay - Gamified Study</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Mini Game Styles */
+        #game-area { position: relative; width: 100%; height: 200px; background: #e2e8f0; overflow: hidden; display: none; border-radius: 8px;}
+        .target { position: absolute; width: 40px; height: 40px; background: #ef4444; border-radius: 50%; cursor: pointer; transition: top 0.2s, left 0.2s; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 pb-10">
+
+    <nav class="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center">
+        <h1 class="text-2xl font-bold">FocusPlay 🚀</h1>
+        
+        <div id="logged-out-view" class="flex items-center gap-4">
+            <button onclick="loginWithGoogle()" class="bg-white text-blue-600 px-4 py-2 rounded font-bold hover:bg-gray-100 shadow">Login with Google</button>
+        </div>
+
+        <div id="logged-in-view" class="flex items-center gap-4 hidden">
+            <span class="font-semibold">Welcome, <span id="user-name">Hacker</span> | Points: <span id="user-points">0</span></span>
+            <button onclick="logout()" class="bg-blue-800 px-4 py-2 rounded hover:bg-blue-900">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+
+        <div class="bg-white p-6 rounded-lg shadow-md col-span-1">
+            <h2 class="text-xl font-bold mb-4 border-b pb-2">📋 To-Do List</h2>
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="task-input" placeholder="Enter task..." class="border p-2 rounded w-full">
+                <button onclick="addTask()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">+</button>
+            </div>
+            <ul id="task-list" class="space-y-2"></ul>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md col-span-1 text-center" id="focus-container">
+            <h2 class="text-xl font-bold mb-4 border-b pb-2">⏱️ Focus Mode</h2>
+            <div id="timer-display" class="text-5xl font-mono font-bold text-blue-600 mb-4">25:00</div>
+            <p id="timer-status" class="text-sm text-gray-500 mb-4">Ready to focus?</p>
+            
+            <button onclick="startFocusSession()" id="start-btn" class="bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-700 w-full mb-4 shadow-lg">Start Session</button>
+            <button onclick="stopFocusSession()" id="stop-btn" class="bg-red-500 text-white px-6 py-2 rounded-full font-bold hover:bg-red-600 w-full hidden shadow-lg">Stop Session</button>
+
+            <div id="game-container" class="mt-6 hidden">
+                <h3 class="font-bold text-lg mb-2 text-purple-600">🎮 Reward Unlocked!</h3>
+                <p class="text-sm mb-2">Click the red dot as fast as you can!</p>
+                <div id="game-area"></div>
+                <button onclick="closeGame()" class="mt-4 text-sm text-gray-500 underline">Close Game</button>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md col-span-1">
+            <h2 class="text-xl font-bold mb-4 border-b pb-2">🏆 Leaderboard</h2>
+            <ul id="leaderboard" class="space-y-3"></ul>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 mt-2">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4 border-b pb-2">📚 Safe Study Viewer</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                Browse approved study materials without leaving your focus session. <br>
+                <span class="font-semibold text-green-600">Approved:</span> <span id="whitelist-display" class="font-mono bg-gray-100 px-2 py-1 rounded"></span>
+            </p>
+            
+            <div class="flex gap-4 mb-4">
+                <input type="text" id="url-input" placeholder="e.g., https://en.wikipedia.org/wiki/Pomodoro_Technique" class="border p-2 rounded w-full">
+                <button onclick="loadStudySite()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-bold">Load Site</button>
+            </div>
+
+            <div id="iframe-container" class="hidden h-96 border-4 border-blue-200 rounded-lg overflow-hidden bg-gray-50">
+                <iframe id="study-frame" class="w-full h-full" src=""></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    
+        const firebaseConfig = {
+            apiKey: "AIzaSyD289aSuWOwu8EoFNWqqtMYR5QQyleLS5k",
+            authDomain: "hack-bc9f1.firebaseapp.com",
+            projectId: "hack-bc9f1",
+            storageBucket: "hack-bc9f1.firebasestorage.app",
+            messagingSenderId: "823845097600",
+            appId: "1:823845097600:web:5977deb3c54b89d6401665"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+    
+        let points = 0;
+        let currentUserData = null;
+        let timerInterval;
+        let timeLeft = 25 * 60; 
+        let isFocusing = false;
+        let gameActive = false;
+
+        // --- Authentication ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserData = user;
+                document.getElementById('logged-out-view').classList.add('hidden');
+                document.getElementById('logged-in-view').classList.remove('hidden');
+                document.getElementById('user-name').innerText = user.displayName.split(" ")[0];
+                fetchLeaderboard(); 
+            } else {
+                currentUserData = null;
+                document.getElementById('logged-out-view').classList.remove('hidden');
+                document.getElementById('logged-in-view').classList.add('hidden');
+                fetchLeaderboard(); 
+            }
+        });
+
+        window.loginWithGoogle = async function() {
+            try { await signInWithPopup(auth, provider); } 
+            catch (error) { alert("Login failed: " + error.message); }
+        };
+
+        window.logout = async function() {
+            try { 
+                await signOut(auth); 
+                points = 0; 
+                document.getElementById('user-points').innerText = points;
+            } catch (error) { console.error("Logout failed!", error.message); }
+        };
+    
+        // --- Database ---
+        async function saveScoreToDatabase() {
+            if (!currentUserData) return; 
+            try {
+                await setDoc(doc(db, "leaderboard", currentUserData.uid), {
+                    name: currentUserData.displayName,
+                    score: points
+                });
+                fetchLeaderboard();
+            } catch (e) { console.error("Error saving score: ", e); }
+        }
+    
+        async function fetchLeaderboard() {
+            const list = document.getElementById('leaderboard');
+            list.innerHTML = '<li>Loading...</li>';
+            try {
+                const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(10));
+                const querySnapshot = await getDocs(q);
+                list.innerHTML = '';
+                let rank = 1;
+                querySnapshot.forEach((doc) => {
+                    const user = doc.data();
+                    const isMe = currentUserData && doc.id === currentUserData.uid;
+                    const li = document.createElement('li');
+                    li.className = `flex justify-between p-2 rounded ${isMe ? "bg-blue-100 font-bold border border-blue-400" : "bg-gray-50"}`;
+                    li.innerHTML = `<span>#${rank} ${user.name}</span> <span class="text-blue-600">${user.score} pts</span>`;
+                    list.appendChild(li);
+                    rank++;
+                });
+            } catch (e) { list.innerHTML = '<li>Be the first on the leaderboard!</li>'; }
+        }
+    
+        // --- To-Do Logic ---
+        window.addTask = function() {
+            const input = document.getElementById('task-input');
+            const taskText = input.value.trim();
+            if (!taskText) return;
+    
+            const li = document.createElement('li');
+            li.className = "flex justify-between items-center bg-gray-50 p-3 rounded border";
+            li.innerHTML = `
+                <span>${taskText}</span>
+                <button onclick="completeTask(this)" class="bg-green-100 text-green-700 px-3 py-1 rounded text-sm hover:bg-green-200">Done (+10 pts)</button>
+            `;
+            document.getElementById('task-list').appendChild(li);
+            input.value = '';
+        };
+    
+        window.completeTask = function(button) {
+            button.parentElement.remove();
+            addPoints(10);
+        };
+
+        function addPoints(amount) {
+            points += amount;
+            document.getElementById('user-points').innerText = points;
+            saveScoreToDatabase();
+            checkGameUnlock();
+        }
+
+        // --- Focus Timer Logic ---
+        function updateDisplay() {
+            const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const secs = (timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+        }
+
+        window.startFocusSession = function() {
+            if (isFocusing) return;
+            isFocusing = true;
+            
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) elem.requestFullscreen();
+
+            document.getElementById('start-btn').classList.add('hidden');
+            document.getElementById('stop-btn').classList.remove('hidden');
+            document.getElementById('timer-status').innerText = "Focusing... Do not switch tabs!";
+
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateDisplay();
+                } else {
+                    window.stopFocusSession(true);
+                }
+            }, 1000);
+        };
+
+        window.stopFocusSession = function(completed = false) {
+            isFocusing = false;
+            clearInterval(timerInterval);
+            
+            if (document.exitFullscreen && document.fullscreenElement) {
+                document.exitFullscreen().catch(err => console.log(err));
+            }
+
+            document.getElementById('start-btn').classList.remove('hidden');
+            document.getElementById('stop-btn').classList.add('hidden');
+            
+            if (completed === true) {
+                document.getElementById('timer-status').innerText = "Session Complete! +50 pts";
+                addPoints(50);
+            } else {
+                document.getElementById('timer-status').innerText = "Session stopped manually.";
+            }
+            
+            timeLeft = 25 * 60; 
+            updateDisplay();
+        };
+
+        // Visibility API (Anti-Cheat)
+        document.addEventListener("visibilitychange", () => {
+            if (isFocusing && document.hidden) {
+                alert("⚠️ You switched tabs! Focus session interrupted.");
+                window.stopFocusSession(false);
+            }
+        });
+
+        // --- Whitelisted Study Viewer Logic ---
+        const approvedDomains = ["wikipedia.org", "w3schools.com", "freecodecamp.org", "khanacademy.org"];
+        document.getElementById('whitelist-display').innerText = approvedDomains.join(", ");
+
+        window.loadStudySite = function() {
+            const urlInput = document.getElementById('url-input').value.trim();
+            if (!urlInput) return;
+
+            try {
+                // Format URL properly if user forgets 'https://'
+                const formattedUrl = urlInput.startsWith('http') ? urlInput : 'https://' + urlInput;
+                const url = new URL(formattedUrl);
+                
+                // Check if the requested domain ends with any of our approved domains
+                const isApproved = approvedDomains.some(domain => url.hostname.endsWith(domain));
+
+                if (isApproved) {
+                    document.getElementById('iframe-container').classList.remove('hidden');
+                    document.getElementById('study-frame').src = url.href;
+                } else {
+                    alert("🚫 Access Denied: This site is not on your approved study whitelist!");
+                }
+            } catch (e) {
+                alert("❌ Please enter a valid URL.");
+            }
+        };
+
+        // --- Mini Game Logic ---
+        function checkGameUnlock() {
+            if (points >= 20 && !gameActive) {
+                document.getElementById('game-container').classList.remove('hidden');
+                initGame();
+            }
+        }
+
+        function initGame() {
+            gameActive = true;
+            const area = document.getElementById('game-area');
+            area.style.display = 'block';
+            area.innerHTML = '';
+            
+            const target = document.createElement('div');
+            target.className = 'target';
+            area.appendChild(target);
+
+            target.onclick = () => {
+                addPoints(5);
+                moveTarget(target, area);
+            };
+            moveTarget(target, area);
+        }
+
+        function moveTarget(target, area) {
+            const maxX = area.clientWidth - 40;
+            const maxY = area.clientHeight - 40;
+            target.style.left = Math.floor(Math.random() * maxX) + 'px';
+            target.style.top = Math.floor(Math.random() * maxY) + 'px';
+        }
+
+        window.closeGame = function() {
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('game-area').style.display = 'none';
+            gameActive = false;
+        };
+
+    </script>
+</body>
+</html>

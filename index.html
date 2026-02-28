@@ -33,10 +33,10 @@
 
     <div id="hero-timer" class="hidden w-full h-screen bg-cover bg-center flex flex-col justify-center items-center relative text-white" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('image_8f371d.jpg'); background-attachment: fixed;">
         <video id="video-video" class="absolute top-0 left-0 w-full h-full object-cover z-0" muted loop>
-            <source src="video.mp4" type="video/mp4">
-        </video>
+        <source src="video.mp4" type="video/mp4">
+    </video>
 
-        <div class="absolute inset-0 bg-black bg-opacity-50 z-0"></div>
+    <div class="absolute inset-0 bg-black bg-opacity-50 z-0"></div>
         <h2 class="relative z-10 text-4xl md:text-5xl font-bold mb-4 tracking-wider text-blue-200">⏱️ FOCUS MODE</h2>
         <div id="hero-timer-display" class="relative z-10 text-8xl md:text-[12rem] font-mono font-bold mb-6 drop-shadow-2xl text-white">25:00</div>
         <p id="hero-timer-status" class="relative z-10 text-2xl md:text-3xl mb-12 font-medium text-gray-200">💪 Focus Time! Stay on this screen.</p>
@@ -51,7 +51,6 @@
             <div class="text-center mt-2 text-3xl text-gray-400">↓</div>
         </div>
     </div>
-
     <div id="main-content" class="container mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
         
         <div class="bg-white p-6 rounded-lg shadow-md col-span-1">
@@ -166,7 +165,7 @@
             <div class="flex-1">
                 <h2 class="text-xl font-bold mb-2 border-b pb-2">📚 Study Vault</h2>
                 
-                <p class="text-xs text-gray-500 mb-2">Approved: <span id="approved-list" class="font-mono text-blue-600 font-bold">wikipedia.org, w3schools.com, spotify.com, open.spotify.com, youtube.com, cppreference.com, codeforces.com, developer.mozilla.org</span></p>
+                <p class="text-xs text-gray-500 mb-2">Approved: <span id="approved-list" class="font-mono text-blue-600 font-bold">wikipedia.org, w3schools.com, spotify.com</span></p>
                 <div class="flex gap-2 mb-4">
                     <input type="text" id="whitelist-input" placeholder="Add domain (e.g. khanacademy.org)" class="border p-2 rounded w-1/3 text-xs bg-gray-50">
                     <button onclick="addToWhitelist()" class="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 font-bold text-xs">+ Add Safe Site</button>
@@ -177,13 +176,7 @@
                     <button onclick="loadStudySite()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-bold whitespace-nowrap shadow">Load</button>
                 </div>
                 <div id="iframe-container" class="hidden h-[500px] border-4 border-blue-100 rounded-lg overflow-hidden relative">
-                    <iframe
-                    id="study-frame"
-                    class="w-full h-full"
-                    src=""
-                    allow="encrypted-media; autoplay"
-                    allowfullscreen>
-                </iframe>
+                    <iframe id="study-frame" class="w-full h-full" src="" allow="encrypted-media"></iframe>
                 </div>
             </div>
 
@@ -194,7 +187,7 @@
                     <li class="bg-white p-3 rounded shadow-sm border-l-4 border-green-500">
                         <span class="font-bold text-gray-800 text-sm">🟢 Spotify Lofi</span>
                         <p class="text-[10px] text-gray-500 mt-1 mb-2">Chill beats to focus to.</p>
-                        <button onclick="fillSuggestion('spotify.com', 'https://open.spotify.com/playlist/0vvXsWCC9xrXsKd4Zsnw0V')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
+                        <button onclick="fillSuggestion('spotify.com', 'https://open.spotify.com/playlist/37i9dQZF1DWWQRwui0ExPn')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
                     </li>
                     
                     <li class="bg-white p-3 rounded shadow-sm border-l-4 border-red-500">
@@ -296,9 +289,7 @@
         let userStreak = 0;
         let lastSessionDate = null;
         let currentLevel = 1; 
-        
-        // --- PROPER WHITELIST (Fixed syntax crash here) ---
-        let whitelist = ["wikipedia.org", "w3schools.com", "spotify.com", "open.spotify.com", "youtube.com", "cppreference.com", "codeforces.com", "developer.mozilla.org"];
+        let whitelist = ["wikipedia.org", "w3schools.com", "spotify.com"];
 
         function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
         function getYesterdayString() { const d = new Date(); d.setDate(d.getDate() - 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
@@ -572,6 +563,7 @@
             if (currentUserData) await setDoc(doc(db, "users", currentUserData.uid), { preferredTime: sessionMinutes }, { merge: true });
         };
 
+        // --- NEW START SESSION WITH BREAK PROMPTS & UI UPDATE ---
         window.startFocusSession = async () => {
             let breakCountStr = prompt("How many breaks do you want to take during this session? (Enter 0 for no breaks)", "0");
             if (breakCountStr === null) return; // User pressed Cancel
@@ -607,6 +599,7 @@
 
             // Reveal Full-Screen Hero & Scroll to top
             document.getElementById('hero-timer').classList.remove('hidden');
+            // ▶️ Play video
             const video = document.getElementById('video-video');
             video.currentTime = 0;
             video.play();
@@ -746,18 +739,12 @@
                 endSession(false); 
             } 
         });
-        document.addEventListener("visibilitychange", () => {
-    const frameSrc =
-        document.getElementById("study-frame")?.src || "";
-
-    // Ignore Spotify activity
-    if (frameSrc.includes("spotify")) return;
-
-    if (isFocusing && !isBreakTime && document.hidden) {
-        alert("🚨 Focus broken! You switched tabs.");
-        endSession(false);
-    }
-});
+        document.addEventListener("fullscreenchange", () => { 
+            if (isFocusing && !isBreakTime && !document.fullscreenElement) { 
+                alert("🚨 Focus broken! You exited full screen."); 
+                endSession(false); 
+            } 
+        });
         window.addEventListener("beforeunload", (e) => { 
             if (isFocusing) { 
                 e.preventDefault(); 
@@ -867,37 +854,15 @@
                     else { return alert("Please paste a link to a specific YouTube video, not the homepage."); }
                 } 
                 
-                // 🎧 CORRECT REAL SPOTIFY ROUTING 🎧
+                // 🎧 CORRECT SPOTIFY ROUTING 🎧
                 else if (requestedDomain.includes('spotify.com')) {
-
-const match = parsedUrl.pathname.match(
-    /(playlist|track|album|episode|show)\/([a-zA-Z0-9]+)/
-);
-
-if (!match) {
-    return alert(
-        "Paste a Spotify playlist, track, album or podcast link."
-    );
-}
-
-const type = match[1];
-const id = match[2];
-
-finalUrl = `https://open.spotify.com/embed/${type}/${id}`;
-
-// Important: delay iframe load slightly
-setTimeout(() => {
-    studyFrame.src = finalUrl;
-}, 100);
-
-iframeContainer.classList.remove('hidden');
-return;
-} else {
-    return alert(
-        "Paste a Spotify playlist, track, album or podcast link."
-    );
-}
-}
+                    if (parsedUrl.pathname.includes('/playlist/') || parsedUrl.pathname.includes('/track/') || parsedUrl.pathname.includes('/album/') || parsedUrl.pathname.includes('/show/')) {
+                        // Use Spotify's official embed URL format cleanly
+                        finalUrl = "https://open.spotify.com/embed" + parsedUrl.pathname;
+                    } else {
+                        return alert("Please paste a direct link to a specific Spotify playlist, track, or album.");
+                    }
+                }
                 
                 else {
                     finalUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlStr)}`;

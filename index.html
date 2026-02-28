@@ -9,6 +9,9 @@
     <style>
         #game-area { position: relative; width: 100%; height: 200px; background: #e2e8f0; overflow: hidden; display: none; border-radius: 8px;}
         .target { position: absolute; width: 40px; height: 40px; background: #ef4444; border-radius: 50%; cursor: pointer; transition: top 0.2s, left 0.2s; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-gray-100 font-sans text-gray-800 pb-10">
@@ -28,18 +31,44 @@
     </nav>
 
     <div class="container mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+        
         <div class="bg-white p-6 rounded-lg shadow-md col-span-1">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h2 class="text-xl font-bold">📋 Task List</h2>
+                <h2 class="text-xl font-bold">📅 Timetable</h2>
                 <button onclick="syncGmailTasks()" class="text-[10px] bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300 font-bold">🔄 Sync Gmail</button>
             </div>
             <p id="gmail-status" class="text-xs text-blue-600 mb-2 hidden animate-pulse">Scanning inbox...</p>
             
-            <div class="flex gap-2 mb-4">
-                <input type="text" id="task-input" placeholder="New task..." class="border p-2 rounded w-full text-sm">
-                <button onclick="addTask()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 font-bold">+</button>
+            <div class="grid grid-cols-2 gap-2 mb-3">
+                <input type="text" id="task-name" placeholder="Task description..." class="col-span-2 border p-2 rounded text-sm">
+                
+                <select id="task-category" class="border p-2 rounded text-xs font-semibold text-gray-700">
+                    <option value="Study">📚 Study</option>
+                    <option value="Club">🎭 Club</option>
+                    <option value="Personal">🏠 Personal</option>
+                </select>
+                
+                <select id="task-priority" class="border p-2 rounded text-xs font-semibold text-gray-700">
+                    <option value="3">🔴 High Priority</option>
+                    <option value="2" selected>🟡 Med Priority</option>
+                    <option value="1">🟢 Low Priority</option>
+                </select>
+                
+                <select id="task-day" class="border p-2 rounded text-xs font-semibold text-gray-700">
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                    <option value="Sunday">Sunday</option>
+                </select>
+                
+                <input type="number" id="task-duration" placeholder="Mins (e.g. 30)" min="1" class="border p-2 rounded text-xs">
             </div>
-            <ul id="task-list" class="space-y-2"></ul>
+            <button onclick="addTask()" class="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 font-bold mb-4 shadow">+ Add to Timetable</button>
+            
+            <ul id="task-list" class="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar"></ul>
         </div>
 
         <div class="bg-white p-6 rounded-lg shadow-md col-span-1 text-center">
@@ -47,9 +76,16 @@
             <div id="timer-display" class="text-5xl font-mono font-bold text-blue-600 mb-2">25:00</div>
             
             <div class="flex justify-center items-center gap-2 mb-4" id="time-setter">
-                <input type="number" id="custom-minutes" value="25" min="1" max="120" class="border p-1 rounded w-16 text-center text-sm font-bold text-gray-700">
-                <span class="text-xs text-gray-500 font-bold">MIN</span>
-                <button onclick="setCustomTime()" class="bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs font-bold hover:bg-gray-300">Set Time</button>
+                <div class="flex flex-col items-center">
+                    <input type="number" id="custom-hours" value="0" min="0" max="12" class="border p-1 rounded w-16 text-center text-sm font-bold text-gray-700">
+                    <span class="text-[10px] text-gray-500 font-bold uppercase">Hours</span>
+                </div>
+                <span class="text-xl font-bold pb-4">:</span>
+                <div class="flex flex-col items-center">
+                    <input type="number" id="custom-minutes" value="25" min="0" max="59" class="border p-1 rounded w-16 text-center text-sm font-bold text-gray-700">
+                    <span class="text-[10px] text-gray-500 font-bold uppercase">Minutes</span>
+                </div>
+                <button onclick="setCustomTime()" class="bg-gray-200 text-gray-700 px-3 py-2 mt-[-16px] rounded text-xs font-bold hover:bg-gray-300">Set</button>
             </div>
 
             <p id="timer-status" class="text-sm text-gray-500 mb-4">Ready to focus?</p>
@@ -104,9 +140,16 @@
 
     <div class="container mx-auto px-4 mt-6">
         <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-bold mb-4 border-b pb-2">📚 Study Vault</h2>
+            <h2 class="text-xl font-bold mb-2 border-b pb-2">📚 Study Vault</h2>
+            
+            <p class="text-xs text-gray-500 mb-2">Approved: <span id="approved-list" class="font-mono text-blue-600 font-bold">wikipedia.org, w3schools.com</span></p>
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="whitelist-input" placeholder="Add domain (e.g. khanacademy.org)" class="border p-2 rounded w-1/3 text-xs bg-gray-50">
+                <button onclick="addToWhitelist()" class="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 font-bold text-xs">+ Add Safe Site</button>
+            </div>
+
             <div class="flex gap-4 mb-4">
-                <input type="text" id="url-input" placeholder="Enter study URL (Wikipedia, W3Schools...)" class="border p-2 rounded w-full text-sm">
+                <input type="text" id="url-input" placeholder="Enter study URL to load..." class="border p-2 rounded w-full text-sm">
                 <button onclick="loadStudySite()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-bold whitespace-nowrap">Load</button>
             </div>
             <div id="iframe-container" class="hidden h-96 border-4 border-blue-100 rounded-lg overflow-hidden">
@@ -132,7 +175,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        
         const provider = new GoogleAuthProvider();
         provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
     
@@ -142,27 +184,43 @@
         let googleAccessToken = null; 
         let timerInterval;
         let gameInterval;
+        let reminderInterval; // 🌟 NEW: Tracks our idle reminder loop
+        let hasNotifiedPriority = false; // Prevents spamming high-priority alerts
         
-        // Timer State & Sound
         let sessionMinutes = 25; 
         let timeLeft = sessionMinutes * 60; 
         let isFocusing = false;
         const successChime = new Audio('https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg');
 
-        // Streaks & Levels
         let userStreak = 0;
         let lastSessionDate = null;
-        let currentLevel = 1; // 🌟 NEW: Track current level to detect level-ups
+        let currentLevel = 1; 
+        let whitelist = ["wikipedia.org", "w3schools.com"];
 
-        function getTodayString() {
-            const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+        function getYesterdayString() { const d = new Date(); d.setDate(d.getDate() - 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+
+        // 🌟 NEW: Notification System Helpers (FR-25 & FR-26)
+        function requestNotificationPermission() {
+            if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
         }
 
-        function getYesterdayString() {
-            const d = new Date();
-            d.setDate(d.getDate() - 1);
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        function sendAppNotification(title, body) {
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, { body: body, icon: "🚀" });
+            }
+        }
+
+        function startIdleReminderLoop() {
+            // Check every 5 minutes (300,000 ms) if they need a nudge
+            // For hackathon demo purposes, you can change this to 30000 (30 seconds) to show the judges!
+            reminderInterval = setInterval(() => {
+                if (!isFocusing && currentUserData) {
+                    sendAppNotification("⏱️ Session Reminder", "You have tasks waiting! Start a Focus Session now.");
+                }
+            }, 300000); 
         }
 
         // --- AUTH & INITIALIZATION ---
@@ -174,46 +232,49 @@
                 document.getElementById('referral-card').classList.remove('hidden');
                 document.getElementById('user-name').innerText = user.displayName.split(" ")[0];
                 
+                // Ask for notification permissions on login
+                requestNotificationPermission();
+                startIdleReminderLoop();
+
                 const userDoc = await getDoc(doc(db, "users", user.uid));
                 if (userDoc.exists()) {
                     const data = userDoc.data();
                     points = data.points || 0;
-                    
-                    // 🌟 Set current level initially so it doesn't fire confetti on page load
                     currentLevel = Math.floor(points / 100) + 1; 
                     
                     if (data.preferredTime) {
                         sessionMinutes = data.preferredTime;
                         timeLeft = sessionMinutes * 60;
-                        document.getElementById('custom-minutes').value = sessionMinutes;
+                        document.getElementById('custom-hours').value = Math.floor(sessionMinutes / 60);
+                        document.getElementById('custom-minutes').value = sessionMinutes % 60;
                         updateTimerDisplay();
                     }
+
+                    if (data.whitelist) whitelist = [...new Set([...whitelist, ...data.whitelist])];
+                    document.getElementById('approved-list').innerText = whitelist.join(", ");
 
                     userStreak = data.streak || 0;
                     lastSessionDate = data.lastSessionDate || null;
                     const today = getTodayString();
-                    const yesterday = getYesterdayString();
-
-                    if (lastSessionDate && lastSessionDate !== today && lastSessionDate !== yesterday) {
+                    if (lastSessionDate && lastSessionDate !== today && lastSessionDate !== getYesterdayString()) {
                         userStreak = 0;
                         await setDoc(doc(db, "users", user.uid), { streak: 0 }, { merge: true });
                     }
                     document.getElementById('user-streak').innerText = userStreak;
-
                     updateUI();
                 } else {
-                    await setDoc(doc(db, "users", user.uid), { points: 0, name: user.displayName, streak: 0 });
+                    await setDoc(doc(db, "users", user.uid), { points: 0, name: user.displayName, streak: 0, whitelist: whitelist });
                 }
 
                 checkReferralReward(user.uid);
-                const cleanUrl = window.location.href.split('?')[0];
-                document.getElementById('ref-link').value = `${cleanUrl}?ref=${user.uid}`;
+                document.getElementById('ref-link').value = `${window.location.href.split('?')[0]}?ref=${user.uid}`;
 
                 loadTasksFromDB();
                 fetchLeaderboard();
                 loadUserStats(); 
             } else {
                 currentUserData = null;
+                clearInterval(reminderInterval); // Stop reminders when logged out
                 document.getElementById('logged-in-view').classList.add('hidden');
                 document.getElementById('logged-out-view').classList.remove('hidden');
                 document.getElementById('referral-card').classList.add('hidden');
@@ -223,8 +284,7 @@
         window.loginWithGoogle = async () => {
             try {
                 const result = await signInWithPopup(auth, provider);
-                const credential = GoogleAuthProvider.credentialFromResult(result);
-                googleAccessToken = credential.accessToken;
+                googleAccessToken = GoogleAuthProvider.credentialFromResult(result).accessToken;
                 localStorage.setItem('gmailToken', googleAccessToken);
             } catch (error) { alert("Login failed: " + error.message); }
         };
@@ -245,61 +305,45 @@
             statusEl.innerText = "Scanning for Class/Club updates...";
 
             try {
-                const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const data = await response.json();
 
                 if (data.messages && data.messages.length > 0) {
-                    const emailPromises = data.messages.map(msg => 
-                        fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}`, {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        }).then(res => res.json())
-                    );
-
-                    const emails = await Promise.all(emailPromises);
+                    const emails = await Promise.all(data.messages.map(msg => 
+                        fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}`, { headers: { 'Authorization': `Bearer ${token}` } }).then(res => res.json())
+                    ));
 
                     emails.forEach(email => {
                         const snippet = email.snippet ? email.snippet.toLowerCase() : "";
-                        const subjectHeader = email.payload && email.payload.headers 
-                            ? email.payload.headers.find(h => h.name === 'Subject') 
-                            : null;
+                        const subjectHeader = email.payload && email.payload.headers ? email.payload.headers.find(h => h.name === 'Subject') : null;
                         const subject = subjectHeader ? subjectHeader.value : "No Subject";
 
-                        const clubKeywords = ["club", "society", "event"];
-                        const classKeywords = ["rescheduled", "cancelled", "scheduled", "class", "lecture", "moved"];
-                        
-                        const foundClass = classKeywords.find(k => snippet.includes(k) || subject.toLowerCase().includes(k));
-                        const foundClub = clubKeywords.find(k => snippet.includes(k) || subject.toLowerCase().includes(k));
+                        const foundClass = ["rescheduled", "cancelled", "scheduled", "class", "lecture", "moved"].find(k => snippet.includes(k) || subject.toLowerCase().includes(k));
+                        const foundClub = ["club", "society", "event"].find(k => snippet.includes(k) || subject.toLowerCase().includes(k));
 
                         if (foundClass) suggestTask(subject, "CLASS ALERT", "bg-red-50 border-red-300 text-red-800");
                         else if (foundClub) suggestTask(subject, "SOCIETY", "bg-yellow-50 border-yellow-300 text-yellow-800");
                     });
-
                     statusEl.innerText = "Inbox Scan Complete!";
-                } else {
-                    statusEl.innerText = "No recent emails found.";
-                }
+                } else { statusEl.innerText = "No recent emails found."; }
                 setTimeout(() => statusEl.classList.add('hidden'), 3000);
-            } catch (e) { 
-                statusEl.innerText = "Sync Failed (Token Expired)"; 
-                console.error("Gmail Fetch Error:", e); 
-            }
+            } catch (e) { statusEl.innerText = "Sync Failed (Token Expired)"; }
         };
 
         function suggestTask(text, type, style) {
             const list = document.getElementById('task-list');
             const li = document.createElement('li');
             li.className = `flex justify-between items-center p-2 rounded border text-xs italic mb-2 shadow-sm ${style}`;
-            const safeText = text.replace(/'/g, "\\'");
-            li.innerHTML = `<span><b>[${type}]</b> ${text.substring(0, 35)}...</span> <button onclick="addTaskFromGmail('${safeText}', this)" class="font-bold underline ml-2 hover:opacity-70">Add</button>`;
+            li.innerHTML = `<span><b>[${type}]</b> ${text.substring(0, 35)}...</span> <button onclick="addTaskFromGmail('${text.replace(/'/g, "\\'")}', this)" class="font-bold underline ml-2 hover:opacity-70">Add</button>`;
             list.prepend(li);
         }
 
         window.addTaskFromGmail = async (text, btnElement) => {
             if (!currentUserData) return;
             const taskId = Date.now().toString();
-            await setDoc(doc(db, "users", currentUserData.uid, "tasks", taskId), { text: `📩 ${text}` });
+            await setDoc(doc(db, "users", currentUserData.uid, "tasks", taskId), { 
+                text: `📩 ${text}`, category: text.includes("CLASS") ? "Study" : "Club", priority: 2, day: "Anyday", duration: 30 
+            });
             btnElement.parentElement.remove(); 
             loadTasksFromDB();
         };
@@ -307,8 +351,7 @@
         // --- REPORTING SYSTEM ---
         async function loadUserStats() {
             if (!currentUserData) return;
-            const docRef = doc(db, "users", currentUserData.uid, "stats", "daily");
-            const d = await getDoc(docRef);
+            const d = await getDoc(doc(db, "users", currentUserData.uid, "stats", "daily"));
             if (d.exists()) {
                 document.getElementById('total-focus').innerText = d.data().totalMinutes || 0;
                 document.getElementById('tasks-done').innerText = d.data().completedTasks || 0;
@@ -320,20 +363,13 @@
             const docRef = doc(db, "users", currentUserData.uid, "stats", "daily");
             const d = await getDoc(docRef);
             const currentData = d.exists() ? d.data() : { totalMinutes: 0, completedTasks: 0 };
-            
-            await setDoc(docRef, {
-                totalMinutes: currentData.totalMinutes + minutes,
-                completedTasks: currentData.completedTasks + taskCount
-            }, { merge: true });
-            
+            await setDoc(docRef, { totalMinutes: currentData.totalMinutes + minutes, completedTasks: currentData.completedTasks + taskCount }, { merge: true });
             loadUserStats();
         }
 
         // --- CORE LOGIC & ANIMATIONS ---
         function updateUI() {
             document.getElementById('user-points').innerText = points;
-            
-            // 🌟 NEW: Check for Level Up!
             let newLevel = Math.floor(points / 100) + 1;
             document.getElementById('user-level').innerText = newLevel;
 
@@ -341,29 +377,17 @@
                 currentLevel = newLevel;
                 triggerLevelUpAnimation();
             }
-
             saveGlobalData();
         }
 
-        // 🌟 NEW: The Confetti & Badge Animation Function
         function triggerLevelUpAnimation() {
-            // Blast the confetti
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
-            });
-
-            // Make the level badge pop visually
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'] });
             const badge = document.getElementById('level-badge');
-            badge.classList.remove('bg-blue-800');
-            badge.classList.add('bg-yellow-400', 'text-black', 'scale-125', 'shadow-lg');
-            
-            // Reset the badge back to normal after 3 seconds
+            badge.classList.replace('bg-blue-800', 'bg-yellow-400');
+            badge.classList.add('text-black', 'scale-125', 'shadow-lg');
             setTimeout(() => {
-                badge.classList.remove('bg-yellow-400', 'text-black', 'scale-125', 'shadow-lg');
-                badge.classList.add('bg-blue-800');
+                badge.classList.remove('text-black', 'scale-125', 'shadow-lg');
+                badge.classList.replace('bg-yellow-400', 'bg-blue-800');
             }, 3000);
         }
 
@@ -374,30 +398,25 @@
             fetchLeaderboard();
         }
 
-        async function checkReferralReward(newUid) {
-            const params = new URLSearchParams(window.location.search);
-            const refId = params.get('ref');
-            if (refId && refId !== newUid) {
-                points += 50;
-                updateUI();
-                alert("🎉 Referral Bonus! You earned 50 points.");
-                window.history.replaceState({}, document.title, "/");
-            }
-        }
+        window.copyRef = () => { document.getElementById('ref-link').select(); navigator.clipboard.writeText(document.getElementById('ref-link').value); alert("Referral link copied!"); };
 
-        window.copyRef = () => {
-            const input = document.getElementById('ref-link');
-            input.select();
-            navigator.clipboard.writeText(input.value);
-            alert("Referral link copied!");
-        };
-
+        // --- TIMETABLE & PRIORITIZATION ---
         window.addTask = async () => {
-            const val = document.getElementById('task-input').value.trim();
-            if (!val || !currentUserData) return;
+            const name = document.getElementById('task-name').value.trim();
+            const category = document.getElementById('task-category').value;
+            const priority = parseInt(document.getElementById('task-priority').value);
+            const day = document.getElementById('task-day').value;
+            const duration = parseInt(document.getElementById('task-duration').value) || 30; 
+
+            if (!name || !currentUserData) return alert("Please enter a task description.");
+            
             const taskId = Date.now().toString();
-            await setDoc(doc(db, "users", currentUserData.uid, "tasks", taskId), { text: val });
-            document.getElementById('task-input').value = "";
+            await setDoc(doc(db, "users", currentUserData.uid, "tasks", taskId), { 
+                text: name, category: category, priority: priority, day: day, duration: duration 
+            });
+            
+            document.getElementById('task-name').value = "";
+            document.getElementById('task-duration').value = "";
             loadTasksFromDB();
         };
 
@@ -405,65 +424,90 @@
             const list = document.getElementById('task-list');
             list.innerHTML = "";
             const snap = await getDocs(collection(db, "users", currentUserData.uid, "tasks"));
-            snap.forEach(tDoc => {
+            let tasks = [];
+            snap.forEach(tDoc => tasks.push({ id: tDoc.id, ...tDoc.data() }));
+
+            tasks.sort((a, b) => b.priority - a.priority);
+
+            // 🌟 NEW: High Priority Task Alert (FR-26)
+            if (!hasNotifiedPriority && tasks.some(t => t.priority === 3)) {
+                sendAppNotification("🚨 High Priority Alert!", "You have red-tier tasks waiting. Focus on these first.");
+                hasNotifiedPriority = true; // Prevent spamming this alert on every reload
+            } else if (!tasks.some(t => t.priority === 3)) {
+                hasNotifiedPriority = false; // Reset if they clear all high priority tasks
+            }
+
+            tasks.forEach(t => {
                 const li = document.createElement('li');
-                li.className = "flex justify-between items-center bg-gray-50 p-2 rounded border text-sm mb-2";
-                li.innerHTML = `<span>${tDoc.data().text}</span> <button onclick="finishTask('${tDoc.id}')" class="text-green-600 font-bold">Done</button>`;
+                li.className = "p-3 rounded-lg border text-sm mb-2 bg-gray-50 flex flex-col gap-2 shadow-sm relative overflow-hidden";
+                
+                let pColor = "bg-green-100 text-green-800"; let pText = "Low";
+                if (t.priority === 3) { pColor = "bg-red-100 text-red-800"; pText = "High"; }
+                else if (t.priority === 2) { pColor = "bg-yellow-100 text-yellow-800"; pText = "Med"; }
+
+                li.innerHTML = `
+                    <div class="absolute left-0 top-0 bottom-0 w-1 ${t.priority === 3 ? 'bg-red-500' : (t.priority === 2 ? 'bg-yellow-400' : 'bg-green-500')}"></div>
+                    <div class="flex justify-between items-start pl-2">
+                        <span class="font-bold text-gray-800">${t.text}</span> 
+                        <button onclick="finishTask('${t.id}')" class="text-green-600 font-extrabold hover:text-green-800 bg-green-100 px-2 py-1 rounded text-xs ml-2 transition-all">Done</button>
+                    </div>
+                    <div class="flex flex-wrap gap-1 text-[10px] pl-2 font-bold uppercase tracking-wider">
+                        <span class="${pColor} px-2 py-1 rounded">${pText} Priority</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">${t.category}</span>
+                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">📅 ${t.day}</span>
+                        <span class="bg-gray-200 text-gray-800 px-2 py-1 rounded">⏱️ ${t.duration}m</span>
+                    </div>
+                `;
                 list.appendChild(li);
             });
         }
 
         window.finishTask = async (id) => {
             await deleteDoc(doc(db, "users", currentUserData.uid, "tasks", id));
-            points += 10;
+            points += 15; 
             updateUI();
             updateDailyStats(0, 1); 
             loadTasksFromDB();
             checkGameUnlock();
         };
 
-        // --- CUSTOM TIMER & FOCUS LOGIC ---
+        // --- CUSTOM TIMER (HOURS + MINUTES) & FOCUS LOGIC ---
         window.setCustomTime = async () => {
             if (isFocusing) return alert("You can't change the time while a session is running!");
             
-            let mins = parseInt(document.getElementById('custom-minutes').value);
-            if (isNaN(mins) || mins < 1 || mins > 120) {
-                return alert("Please enter a valid time between 1 and 120 minutes.");
-            }
+            let hrs = parseInt(document.getElementById('custom-hours').value) || 0;
+            let mins = parseInt(document.getElementById('custom-minutes').value) || 0;
+            if (hrs < 0 || mins < 0 || (hrs === 0 && mins === 0)) return alert("Please enter a valid duration.");
             
-            sessionMinutes = mins;
+            sessionMinutes = (hrs * 60) + mins;
             timeLeft = sessionMinutes * 60;
             updateTimerDisplay();
 
-            if (currentUserData) {
-                await setDoc(doc(db, "users", currentUserData.uid), { preferredTime: sessionMinutes }, { merge: true });
-            }
+            if (currentUserData) await setDoc(doc(db, "users", currentUserData.uid), { preferredTime: sessionMinutes }, { merge: true });
         };
 
         window.startFocusSession = () => {
             isFocusing = true;
             if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
-            
             document.getElementById('start-btn').classList.add('hidden');
             document.getElementById('stop-btn').classList.remove('hidden');
             document.getElementById('time-setter').classList.add('hidden'); 
             
             timerInterval = setInterval(() => {
-                if (timeLeft > 0) { timeLeft--; updateTimerDisplay(); }
-                else { endSession(true); }
+                if (timeLeft > 0) { timeLeft--; updateTimerDisplay(); } else { endSession(true); }
             }, 1000);
         };
 
         function updateTimerDisplay() {
-            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const h = Math.floor(timeLeft / 3600);
+            const m = Math.floor((timeLeft % 3600) / 60).toString().padStart(2, '0');
             const s = (timeLeft % 60).toString().padStart(2, '0');
-            document.getElementById('timer-display').innerText = `${m}:${s}`;
+            document.getElementById('timer-display').innerText = h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
         }
 
         function endSession(success) {
             clearInterval(timerInterval);
             isFocusing = false;
-            
             if (document.fullscreenElement) document.exitFullscreen();
             
             document.getElementById('start-btn').classList.remove('hidden');
@@ -472,43 +516,30 @@
             
             if (success) { 
                 successChime.play();
-                
                 const pointsEarned = sessionMinutes * 2; 
                 points += pointsEarned; 
                 updateUI(); 
                 updateDailyStats(sessionMinutes, 0); 
                 
                 const today = getTodayString();
-                const yesterday = getYesterdayString();
-
-                if (lastSessionDate === yesterday) {
-                    userStreak += 1; 
-                } else if (lastSessionDate !== today) {
-                    userStreak = 1; 
-                }
+                if (lastSessionDate === getYesterdayString()) userStreak += 1; 
+                else if (lastSessionDate !== today) userStreak = 1; 
                 
                 lastSessionDate = today;
                 document.getElementById('user-streak').innerText = userStreak;
+                if (currentUserData) setDoc(doc(db, "users", currentUserData.uid), { streak: userStreak, lastSessionDate: lastSessionDate }, { merge: true });
 
-                if (currentUserData) {
-                    setDoc(doc(db, "users", currentUserData.uid), { 
-                        streak: userStreak, 
-                        lastSessionDate: lastSessionDate 
-                    }, { merge: true });
-                }
-
-                setTimeout(() => {
-                    alert(`Success! You earned +${pointsEarned} pts`); 
-                }, 100);
+                setTimeout(() => { alert(`Success! You earned +${pointsEarned} pts`); }, 100);
             }
-            
             timeLeft = sessionMinutes * 60; 
             updateTimerDisplay();
         }
 
-        document.addEventListener("visibilitychange", () => {
-            if (isFocusing && document.hidden) { alert("Focus broken!"); endSession(false); }
-        });
+        // --- STRICT FOCUS ENFORCEMENT ---
+        document.addEventListener("visibilitychange", () => { if (isFocusing && document.hidden) { alert("🚨 Focus broken! You switched tabs."); endSession(false); } });
+        document.addEventListener("fullscreenchange", () => { if (isFocusing && !document.fullscreenElement) { alert("🚨 Focus broken! You exited full screen."); endSession(false); } });
+        window.addEventListener("beforeunload", (e) => { if (isFocusing) { e.preventDefault(); e.returnValue = "Active session! Leave?"; } });
+        document.addEventListener("keydown", (e) => { if (isFocusing && (e.ctrlKey || e.metaKey)) e.preventDefault(); });
 
         async function fetchLeaderboard() {
             const list = document.getElementById('leaderboard');
@@ -523,28 +554,44 @@
             });
         }
 
-        // --- STUDY VAULT (WITH IFRAME BYPASS) ---
+        // --- STUDY VAULT (WHITELIST LOGIC) ---
+        window.addToWhitelist = async () => {
+            if (!currentUserData) return alert("Please log in first!");
+            let rawInput = document.getElementById('whitelist-input').value.trim().toLowerCase();
+            if (!rawInput) return;
+
+            let baseDomain = rawInput.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+            if (!whitelist.includes(baseDomain)) {
+                whitelist.push(baseDomain);
+                document.getElementById('approved-list').innerText = whitelist.join(", ");
+                document.getElementById('whitelist-input').value = "";
+                await setDoc(doc(db, "users", currentUserData.uid), { whitelist: whitelist }, { merge: true });
+                alert(`✅ ${baseDomain} added to your approved Study Vault!`);
+            } else alert("That domain is already approved.");
+        };
+
         window.loadStudySite = () => {
-            let url = document.getElementById('url-input').value.trim();
-            if (!url) return;
-            if (!url.startsWith("http")) { url = "https://" + url; }
+            let urlStr = document.getElementById('url-input').value.trim();
+            if (!urlStr) return;
+            if (!urlStr.startsWith("http")) urlStr = "https://" + urlStr; 
 
-            const iframeContainer = document.getElementById('iframe-container');
-            const studyFrame = document.getElementById('study-frame');
-            const proxiedUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-
-            iframeContainer.classList.remove('hidden');
-            studyFrame.src = proxiedUrl;
+            try {
+                const requestedDomain = new URL(urlStr).hostname.replace('www.', '');
+                if (!whitelist.some(approvedSite => requestedDomain.endsWith(approvedSite))) {
+                    return alert(`🛑 Access Denied! \n\n"${requestedDomain}" is not on your approved study list.`); 
+                }
+                document.getElementById('iframe-container').classList.remove('hidden');
+                document.getElementById('study-frame').src = `https://corsproxy.io/?${encodeURIComponent(urlStr)}`;
+            } catch (e) { alert("Please enter a valid URL format."); }
         };
 
         // --- REWARD GAME LOGIC ---
         window.checkGameUnlock = () => { 
             if(points >= 20) {
                 const gameContainer = document.getElementById('game-container');
-                const gameArea = document.getElementById('game-area');
                 if (gameContainer.classList.contains('hidden')) {
                     gameContainer.classList.remove('hidden');
-                    gameArea.style.display = 'block';
+                    document.getElementById('game-area').style.display = 'block';
                     startGame();
                 }
             } 
@@ -556,17 +603,10 @@
             gameInterval = setInterval(() => {
                 const target = document.createElement('div');
                 target.className = 'target shadow-lg';
-                const maxX = gameArea.clientWidth - 40;
-                const maxY = gameArea.clientHeight - 40;
-                target.style.left = Math.floor(Math.random() * maxX) + 'px';
-                target.style.top = Math.floor(Math.random() * maxY) + 'px';
+                target.style.left = Math.floor(Math.random() * (gameArea.clientWidth - 40)) + 'px';
+                target.style.top = Math.floor(Math.random() * (gameArea.clientHeight - 40)) + 'px';
                 
-                target.onclick = () => {
-                    target.remove();
-                    points += 2; 
-                    updateUI();
-                };
-                
+                target.onclick = () => { target.remove(); points += 2; updateUI(); };
                 gameArea.appendChild(target);
                 setTimeout(() => { if (target.parentElement) target.remove(); }, 1500);
             }, 1000); 
@@ -575,7 +615,6 @@
         window.closeGame = () => {
             document.getElementById('game-container').classList.add('hidden');
             document.getElementById('game-area').style.display = 'none';
-            document.getElementById('game-area').innerHTML = ''; 
             clearInterval(gameInterval); 
         };
 

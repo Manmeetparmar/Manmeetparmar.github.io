@@ -286,10 +286,11 @@
         let isFocusing = false;
         const successChime = new Audio('https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg');
 
-        // CORRECTED WHITELIST
         let userStreak = 0;
         let lastSessionDate = null;
         let currentLevel = 1; 
+        
+        // CLEAN WHITELIST
         let whitelist = ["wikipedia.org", "w3schools.com", "spotify.com", "youtube.com", "cppreference.com", "codeforces.com", "developer.mozilla.org"];
 
         function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
@@ -856,7 +857,7 @@
                 // 🎧 CORRECT SPOTIFY ROUTING 🎧
                 else if (requestedDomain.includes('spotify.com')) {
                     if (parsedUrl.pathname.includes('/playlist/') || parsedUrl.pathname.includes('/track/') || parsedUrl.pathname.includes('/album/') || parsedUrl.pathname.includes('/show/')) {
-                        // Use Spotify's official embed URL format cleanly
+                        // Insert /embed right after the domain to use Spotify's official iframe player
                         finalUrl = "https://open.spotify.com/embed" + parsedUrl.pathname;
                     } else {
                         return alert("Please paste a direct link to a specific Spotify playlist, track, or album.");

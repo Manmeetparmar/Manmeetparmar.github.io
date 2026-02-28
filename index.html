@@ -155,33 +155,68 @@
                     <button onclick="loadStudySite()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-bold whitespace-nowrap shadow">Load</button>
                 </div>
                 <div id="iframe-container" class="hidden h-[500px] border-4 border-blue-100 rounded-lg overflow-hidden relative">
-                    <iframe id="study-frame" class="w-full h-full" src=""></iframe>
+                    <iframe id="study-frame" class="w-full h-full" src="" allow="encrypted-media"></iframe>
                 </div>
             </div>
 
             <div class="w-full md:w-1/4 bg-blue-50 p-4 rounded-lg border border-blue-100 shadow-inner">
                 <h3 class="font-bold text-sm mb-4 text-blue-800 border-b border-blue-200 pb-2">💡 Suggested Sites</h3>
-                <ul class="space-y-4 text-xs">
-                    <li class="bg-white p-3 rounded shadow-sm">
-                        <span class="font-bold text-gray-800 text-sm">🎧 Lofi Focus Timer</span>
-                        <p class="text-[10px] text-gray-500 mt-1 mb-2">2-hour Pomodoro with rain sounds.</p>
-                        <button onclick="fillSuggestion('youtube.com', 'https://www.youtube.com/watch?v=jfKfPfyJRdk')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
+                <ul class="space-y-4 text-xs h-[450px] overflow-y-auto pr-2 custom-scrollbar">
+                    
+                    <li class="bg-white p-3 rounded shadow-sm border-l-4 border-green-500">
+                        <span class="font-bold text-gray-800 text-sm">🟢 Spotify Lofi</span>
+                        <p class="text-[10px] text-gray-500 mt-1 mb-2">Chill beats to focus to.</p>
+                        <button onclick="fillSuggestion('open.spotify.com', 'https://open.spotify.com/playlist/37i9dQZF1DWWQRwui0ExPn')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
                     </li>
-                    <li class="bg-white p-3 rounded shadow-sm">
-                        <span class="font-bold text-gray-800 text-sm">💻 W3Schools (C++)</span>
-                        <p class="text-[10px] text-gray-500 mt-1 mb-2">Great for quick syntax lookups.</p>
-                        <button onclick="fillSuggestion('w3schools.com', 'https://www.w3schools.com/cpp/')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
+                    
+                    <li class="bg-white p-3 rounded shadow-sm border-l-4 border-red-500">
+                        <span class="font-bold text-gray-800 text-sm">🍎 YouTube Pomodoro</span>
+                        <p class="text-[10px] text-gray-500 mt-1 mb-2">50/10 study timer with alarm.</p>
+                        <button onclick="fillSuggestion('youtube.com', 'https://www.youtube.com/watch?v=COmEw4u8Rkk')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
                     </li>
-                    <li class="bg-white p-3 rounded shadow-sm">
-                        <span class="font-bold text-gray-800 text-sm">📖 Wiki: Chemistry</span>
-                        <p class="text-[10px] text-gray-500 mt-1 mb-2">Crystal Field Theory reading.</p>
-                        <button onclick="fillSuggestion('wikipedia.org', 'https://en.wikipedia.org/wiki/Crystal_field_theory')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
+
+                    <li class="bg-white p-3 rounded shadow-sm border-l-4 border-gray-800">
+                        <span class="font-bold text-gray-800 text-sm">📓 Anime OST Study</span>
+                        <p class="text-[10px] text-gray-500 mt-1 mb-2">Death Note ambient soundtrack.</p>
+                        <button onclick="fillSuggestion('youtube.com', 'https://www.youtube.com/watch?v=VKMWEDm5t64')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
                     </li>
-                    <li class="bg-white p-3 rounded shadow-sm">
+
+                    <li class="bg-white p-3 rounded shadow-sm border-l-4 border-blue-600">
+                        <span class="font-bold text-gray-800 text-sm">⚙️ C++ Reference</span>
+                        <p class="text-[10px] text-gray-500 mt-1 mb-2">cppreference.com documentation.</p>
+                        <button onclick="fillSuggestion('cppreference.com', 'https://en.cppreference.com/w/')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
+                    </li>
+
+                    <li class="bg-white p-3 rounded shadow-sm border-l-4 border-yellow-500">
+                        <span class="font-bold text-gray-800 text-sm">🏆 Codeforces</span>
+                        <p class="text-[10px] text-gray-500 mt-1 mb-2">Competitive programming problems.</p>
+                        <button onclick="fillSuggestion('codeforces.com', 'https://codeforces.com/problemset')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
+                    </li>
+
+                    <li class="bg-white p-3 rounded shadow-sm border-l-4 border-teal-500">
+                        <span class="font-bold text-gray-800 text-sm">🌐 MDN Web Docs</span>
+                        <p class="text-[10px] text-gray-500 mt-1 mb-2">HTML, CSS, and JS reference.</p>
+                        <button onclick="fillSuggestion('developer.mozilla.org', 'https://developer.mozilla.org/en-US/docs/Web/JavaScript')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
+                    </li>
+
+                    <li class="bg-white p-3 rounded shadow-sm border-l-4 border-orange-500">
+                        <span class="font-bold text-gray-800 text-sm">🤖 Scikit-Learn</span>
+                        <p class="text-[10px] text-gray-500 mt-1 mb-2">Machine Learning documentation.</p>
+                        <button onclick="fillSuggestion('scikit-learn.org', 'https://scikit-learn.org/stable/')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
+                    </li>
+
+                    <li class="bg-white p-3 rounded shadow-sm border-l-4 border-indigo-500">
+                        <span class="font-bold text-gray-800 text-sm">⚡ Physics: Hall Effect</span>
+                        <p class="text-[10px] text-gray-500 mt-1 mb-2">Electromagnetism Wikipedia notes.</p>
+                        <button onclick="fillSuggestion('wikipedia.org', 'https://en.wikipedia.org/wiki/Hall_effect')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
+                    </li>
+
+                    <li class="bg-white p-3 rounded shadow-sm border-l-4 border-purple-500">
                         <span class="font-bold text-gray-800 text-sm">🧪 LibreTexts (Chem)</span>
-                        <p class="text-[10px] text-gray-500 mt-1 mb-2">Open-source science textbooks.</p>
+                        <p class="text-[10px] text-gray-500 mt-1 mb-2">Open-source chemistry textbook.</p>
                         <button onclick="fillSuggestion('libretexts.org', 'https://chem.libretexts.org/')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
                     </li>
+
                 </ul>
             </div>
             
@@ -297,7 +332,6 @@
                 points += 50;
                 updateUI();
                 alert("🎉 Referral Bonus! You earned 50 points.");
-                // Clean the URL so the ref param is not reused
                 window.history.replaceState({}, document.title, window.location.pathname || '/');
             }
         }
@@ -580,22 +614,20 @@
             } else alert("That domain is already approved.");
         };
 
-        // 🌟 NEW: Auto-Fill Suggestion Feature
         window.fillSuggestion = async (domain, fullUrl) => {
             if (!currentUserData) return alert("Please log in first to load suggestions!");
             
-            // Auto-add to whitelist if it isn't there already
             if (!whitelist.includes(domain)) {
                 whitelist.push(domain);
                 document.getElementById('approved-list').innerText = whitelist.join(", ");
                 await setDoc(doc(db, "users", currentUserData.uid), { whitelist: whitelist }, { merge: true });
             }
             
-            // Paste it in the bar and load it
             document.getElementById('url-input').value = fullUrl;
             loadStudySite();
         };
 
+        // --- STUDY VAULT (SMART YOUTUBE & SPOTIFY EMBEDDING) ---
         window.loadStudySite = () => {
             let urlStr = document.getElementById('url-input').value.trim();
             if (!urlStr) return;
@@ -621,6 +653,13 @@
                     if (videoId) { finalUrl = `https://www.youtube.com/embed/${videoId}`; } 
                     else { return alert("Please paste a link to a specific YouTube video, not the homepage."); }
                 } 
+                else if (requestedDomain.includes('open.spotify.com')) {
+                    if (parsedUrl.pathname.includes('/playlist/') || parsedUrl.pathname.includes('/track/') || parsedUrl.pathname.includes('/album/') || parsedUrl.pathname.includes('/show/')) {
+                        finalUrl = `https://open.spotify.com/embed${parsedUrl.pathname}`;
+                    } else {
+                        return alert("Please paste a direct link to a specific Spotify playlist, track, or album.");
+                    }
+                }
                 else {
                     finalUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlStr)}`;
                 }

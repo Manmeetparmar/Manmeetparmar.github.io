@@ -177,7 +177,13 @@
                     <button onclick="loadStudySite()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-bold whitespace-nowrap shadow">Load</button>
                 </div>
                 <div id="iframe-container" class="hidden h-[500px] border-4 border-blue-100 rounded-lg overflow-hidden relative">
-                    <iframe id="study-frame" class="w-full h-full" src="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+                    <iframe
+                    id="study-frame"
+                    class="w-full h-full"
+                    src=""
+                    allow="encrypted-media; autoplay"
+                    allowfullscreen>
+                </iframe>
                 </div>
             </div>
 
@@ -740,12 +746,18 @@
                 endSession(false); 
             } 
         });
-        document.addEventListener("fullscreenchange", () => { 
-            if (isFocusing && !isBreakTime && !document.fullscreenElement) { 
-                alert("🚨 Focus broken! You exited full screen."); 
-                endSession(false); 
-            } 
-        });
+        document.addEventListener("visibilitychange", () => {
+    const frameSrc =
+        document.getElementById("study-frame")?.src || "";
+
+    // Ignore Spotify activity
+    if (frameSrc.includes("spotify")) return;
+
+    if (isFocusing && !isBreakTime && document.hidden) {
+        alert("🚨 Focus broken! You switched tabs.");
+        endSession(false);
+    }
+});
         window.addEventListener("beforeunload", (e) => { 
             if (isFocusing) { 
                 e.preventDefault(); 
@@ -857,13 +869,32 @@
                 
                 // 🎧 CORRECT REAL SPOTIFY ROUTING 🎧
                 else if (requestedDomain.includes('spotify.com')) {
-                    if (parsedUrl.pathname.includes('/playlist/') || parsedUrl.pathname.includes('/track/') || parsedUrl.pathname.includes('/album/') || parsedUrl.pathname.includes('/show/') || parsedUrl.pathname.includes('/episode/')) {
-                        // Insert /embed into the path to use Spotify's official iframe player
-                        finalUrl = "https://open.spotify.com/embed" + parsedUrl.pathname;
-                    } else {
-                        return alert("Please paste a direct link to a specific Spotify playlist, track, or album.");
-                    }
-                }
+
+// Exit fullscreen to prevent Spotify crash
+if (document.fullscreenElement) {
+    document.exitFullscreen().catch(()=>{});
+}
+
+if (
+    parsedUrl.pathname.includes('/playlist/') ||
+    parsedUrl.pathname.includes('/track/') ||
+    parsedUrl.pathname.includes('/album/') ||
+    parsedUrl.pathname.includes('/show/') ||
+    parsedUrl.pathname.includes('/episode/')
+) {
+
+    // Preserve Spotify parameters
+    finalUrl =
+        "https://open.spotify.com/embed" +
+        parsedUrl.pathname +
+        parsedUrl.search;
+
+} else {
+    return alert(
+        "Paste a Spotify playlist, track, album or podcast link."
+    );
+}
+}
                 
                 else {
                     finalUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlStr)}`;

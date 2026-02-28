@@ -254,6 +254,14 @@
         
         let sessionMinutes = 25; 
         let timeLeft = sessionMinutes * 60; 
+        
+        // --- BREAK LOGIC VARIABLES ---
+        let currentPhaseLeft = timeLeft;
+        let isBreakTime = false;
+        let pendingBreaks = [];
+        let workIntervalSecs = 0;
+        // -----------------------------
+
         let isFocusing = false;
         const successChime = new Audio('https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg');
 
@@ -289,6 +297,7 @@
                     if (data.preferredTime) {
                         sessionMinutes = data.preferredTime;
                         timeLeft = sessionMinutes * 60;
+                        currentPhaseLeft = timeLeft;
                         document.getElementById('custom-hours').value = Math.floor(sessionMinutes / 60);
                         document.getElementById('custom-minutes').value = sessionMinutes % 60;
                         updateTimerDisplay();
@@ -527,40 +536,130 @@
             
             sessionMinutes = (hrs * 60) + mins;
             timeLeft = sessionMinutes * 60;
+            currentPhaseLeft = timeLeft;
             updateTimerDisplay();
 
             if (currentUserData) await setDoc(doc(db, "users", currentUserData.uid), { preferredTime: sessionMinutes }, { merge: true });
         };
 
-        window.startFocusSession = () => {
+        // --- NEW START SESSION WITH BREAK PROMPTS ---
+        window.startFocusSession = async () => {
+            let breakCountStr = prompt("How many breaks do you want to take during this session? (Enter 0 for no breaks)", "0");
+            if (breakCountStr === null) return; // User pressed Cancel
+            
+            let numBreaks = parseInt(breakCountStr) || 0;
+            pendingBreaks = [];
+            
+            for(let i = 0; i < numBreaks; i++) {
+                let dur = prompt(`How many minutes for Break #${i+1}?`, "5");
+                if (dur === null) return; // User pressed Cancel
+                pendingBreaks.push(parseInt(dur) || 5);
+            }
+
+            // Calculate even work intervals
+            if (numBreaks > 0) {
+                workIntervalSecs = Math.floor((sessionMinutes * 60) / (numBreaks + 1));
+            } else {
+                workIntervalSecs = sessionMinutes * 60;
+            }
+            
+            currentPhaseLeft = workIntervalSecs;
+            isBreakTime = false;
             isFocusing = true;
-            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+
+            const statusEl = document.getElementById('timer-status');
+            statusEl.innerText = "💪 Focus Time! Stay on this screen.";
+            statusEl.className = "text-sm text-blue-600 font-bold animate-pulse mb-4";
+
+            try {
+                if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+            } catch (e) { console.warn("Fullscreen blocked", e); }
+            
             document.getElementById('start-btn').classList.add('hidden');
             document.getElementById('stop-btn').classList.remove('hidden');
             document.getElementById('time-setter').classList.add('hidden'); 
             
-            timerInterval = setInterval(() => { if (timeLeft > 0) { timeLeft--; updateTimerDisplay(); } else { endSession(true); } }, 1000);
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => { 
+                if (currentPhaseLeft > 0) { 
+                    currentPhaseLeft--; 
+                    updateTimerDisplay(); 
+                } else { 
+                    handlePhaseEnd(); 
+                } 
+            }, 1000);
         };
 
+        // --- PHASE TRANSITION LOGIC ---
+        async function handlePhaseEnd() {
+            if (!isBreakTime) {
+                // Finished a WORK phase
+                if (pendingBreaks.length > 0) {
+                    isBreakTime = true;
+                    let nextBreakMins = pendingBreaks.shift();
+                    currentPhaseLeft = nextBreakMins * 60;
+                    
+                    const statusEl = document.getElementById('timer-status');
+                    statusEl.innerText = `☕ Break Time! (${nextBreakMins} min) You can leave the screen.`;
+                    statusEl.className = "text-sm text-green-600 font-bold animate-pulse mb-4";
+                    
+                    // Allow the user to switch tabs/exit fullscreen
+                    if (document.fullscreenElement) document.exitFullscreen().catch(e=>console.log(e));
+                    
+                    successChime.play();
+                    alert(`Great job! Take a ${nextBreakMins} minute break. You can switch tabs now.`);
+                    updateTimerDisplay();
+                } else {
+                    // Entire session is done
+                    endSession(true);
+                }
+            } else {
+                // Finished a BREAK phase
+                isBreakTime = false;
+                currentPhaseLeft = workIntervalSecs;
+                
+                const statusEl = document.getElementById('timer-status');
+                statusEl.innerText = "💪 Focus Time! Stay on this screen.";
+                statusEl.className = "text-sm text-blue-600 font-bold animate-pulse mb-4";
+                
+                successChime.play();
+                alert("Break is over! Click OK to go back to full screen and resume work.");
+                
+                // Force full screen and restrictions back on
+                try {
+                    if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+                } catch(e) {
+                    alert("Please click anywhere on the page to re-enter full screen.");
+                }
+                updateTimerDisplay();
+            }
+        }
+
         function updateTimerDisplay() {
-            const h = Math.floor(timeLeft / 3600);
-            const m = Math.floor((timeLeft % 3600) / 60).toString().padStart(2, '0');
-            const s = (timeLeft % 60).toString().padStart(2, '0');
+            const h = Math.floor(currentPhaseLeft / 3600);
+            const m = Math.floor((currentPhaseLeft % 3600) / 60).toString().padStart(2, '0');
+            const s = (currentPhaseLeft % 60).toString().padStart(2, '0');
             document.getElementById('timer-display').innerText = h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
         }
 
         function endSession(success) {
             clearInterval(timerInterval);
             isFocusing = false;
-            if (document.fullscreenElement) document.exitFullscreen();
+            isBreakTime = false;
+            if (document.fullscreenElement) document.exitFullscreen().catch(e=>console.log(e));
             
+            const statusEl = document.getElementById('timer-status');
+            statusEl.innerText = "Ready to focus?";
+            statusEl.className = "text-sm text-gray-500 mb-4";
+
             document.getElementById('start-btn').classList.remove('hidden');
             document.getElementById('stop-btn').classList.add('hidden');
             document.getElementById('time-setter').classList.remove('hidden'); 
             
             if (success) { 
                 successChime.play();
-                const pointsEarned = sessionMinutes * 2; 
+                const pointsEarned = sessionMinutes * 2; // Original focus time dictates points
                 points += pointsEarned; 
                 updateUI(); 
                 updateDailyStats(sessionMinutes, 0); 
@@ -576,13 +675,32 @@
                 setTimeout(() => { alert(`Success! You earned +${pointsEarned} pts`); }, 100);
             }
             timeLeft = sessionMinutes * 60; 
+            currentPhaseLeft = timeLeft;
             updateTimerDisplay();
         }
 
-        document.addEventListener("visibilitychange", () => { if (isFocusing && document.hidden) { alert("🚨 Focus broken! You switched tabs."); endSession(false); } });
-        document.addEventListener("fullscreenchange", () => { if (isFocusing && !document.fullscreenElement) { alert("🚨 Focus broken! You exited full screen."); endSession(false); } });
-        window.addEventListener("beforeunload", (e) => { if (isFocusing) { e.preventDefault(); e.returnValue = "Active session! Leave?"; } });
-        document.addEventListener("keydown", (e) => { if (isFocusing && (e.ctrlKey || e.metaKey)) e.preventDefault(); });
+        // Only enforce restrictions if they are focusing AND NOT on a break
+        document.addEventListener("visibilitychange", () => { 
+            if (isFocusing && !isBreakTime && document.hidden) { 
+                alert("🚨 Focus broken! You switched tabs."); 
+                endSession(false); 
+            } 
+        });
+        document.addEventListener("fullscreenchange", () => { 
+            if (isFocusing && !isBreakTime && !document.fullscreenElement) { 
+                alert("🚨 Focus broken! You exited full screen."); 
+                endSession(false); 
+            } 
+        });
+        window.addEventListener("beforeunload", (e) => { 
+            if (isFocusing) { 
+                e.preventDefault(); 
+                e.returnValue = "Active session! Leave?"; 
+            } 
+        });
+        document.addEventListener("keydown", (e) => { 
+            if (isFocusing && !isBreakTime && (e.ctrlKey || e.metaKey)) e.preventDefault(); 
+        });
 
         async function fetchLeaderboard() {
             const list = document.getElementById('leaderboard');

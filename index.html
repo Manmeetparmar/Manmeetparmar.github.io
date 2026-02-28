@@ -858,7 +858,7 @@
                 // 🎧 CORRECT SPOTIFY ROUTING 🎧
                 else if (requestedDomain.includes('spotify.com')) {
                     if (parsedUrl.pathname.includes('/playlist/') || parsedUrl.pathname.includes('/track/') || parsedUrl.pathname.includes('/album/') || parsedUrl.pathname.includes('/show/')) {
-                        // Insert /embed right after the domain to use Spotify's official iframe player
+                        // Construct the official Spotify embed URL
                         finalUrl = "https://open.spotify.com/embed" + parsedUrl.pathname;
                     } else {
                         return alert("Please paste a direct link to a specific Spotify playlist, track, or album.");

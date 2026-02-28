@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
+       
         #game-area { position: relative; width: 100%; height: 200px; background: #e2e8f0; overflow: hidden; display: none; border-radius: 8px;}
         .target { position: absolute; width: 40px; height: 40px; background: #ef4444; border-radius: 50%; cursor: pointer; transition: top 0.2s, left 0.2s; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -15,10 +16,16 @@
         html { scroll-behavior: smooth; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800 pb-10">
 
+<body class="font-sans text-gray-800 pb-10">
+    <video autoplay muted loop playsinline 
+class="fixed top-0 left-0 w-full h-full object-cover -z-10">
+    <source src="67.mp4" type="video/mp4">
+</video>
+
+<div class="fixed inset-0 bg-black/40 -z-10"></div>
     <nav class="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center relative z-50">
-        <h1 class="text-2xl font-bold">FocusPlay 🚀</h1>
+        <h1 class="text-2xl font-bold">BT SORTED</h1>
         <div id="logged-out-view" class="flex items-center gap-4">
             <button onclick="loginWithGoogle()" class="bg-white text-blue-600 px-4 py-2 rounded font-bold hover:bg-gray-100 shadow">Login with Google</button>
         </div>
@@ -39,7 +46,7 @@
     <div class="absolute inset-0 bg-black bg-opacity-50 z-0"></div>
         <h2 class="relative z-10 text-4xl md:text-5xl font-bold mb-4 tracking-wider text-blue-200">⏱️ FOCUS MODE</h2>
         <div id="hero-timer-display" class="relative z-10 text-8xl md:text-[12rem] font-mono font-bold mb-6 drop-shadow-2xl text-white">25:00</div>
-        <p id="hero-timer-status" class="relative z-10 text-2xl md:text-3xl mb-12 font-medium text-gray-200">💪 Focus Time! Stay on this screen.</p>
+        <p id="hero-timer-status" class="relative z-10 text-2xl md:text-3xl mb-12 font-medium text-gray-200">Remember why you started.</p>
         
         <div class="z-10 flex flex-col md:flex-row gap-6">
             <button onclick="stopFocusSession()" id="hero-stop-btn" class="bg-red-500 text-white px-10 py-4 rounded-full font-bold hover:bg-red-600 text-xl shadow-[0_0_20px_rgba(239,68,68,0.5)] transition transform hover:scale-105">Stop Session</button>
@@ -53,7 +60,7 @@
     </div>
     <div id="main-content" class="container mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
         
-        <div class="bg-white p-6 rounded-lg shadow-md col-span-1">
+        <div class="bg-white/80 backdrop-blur-md p-6 rounded-lg shadow-md col-span-1">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <h2 class="text-xl font-bold">📅 Timetable</h2>
                 <button onclick="syncGmailTasks()" class="text-[10px] bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300 font-bold">🔄 Sync Gmail</button>
@@ -64,9 +71,9 @@
                 <input type="text" id="task-name" placeholder="Task description..." class="col-span-2 border p-2 rounded text-sm">
                 
                 <select id="task-category" class="border p-2 rounded text-xs font-semibold text-gray-700">
-                    <option value="Study">📚 Study</option>
-                    <option value="Club">🎭 Club</option>
-                    <option value="Personal">🏠 Personal</option>
+                    <option value="Study">📚 Academics</option>
+                    <option value="Club">🎭 Clubs</option>
+                    <option value="Personal">🏠 Skills </option>
                 </select>
                 
                 <select id="task-priority" class="border p-2 rounded text-xs font-semibold text-gray-700">
@@ -87,7 +94,7 @@
                 
                 <input type="number" id="task-duration" placeholder="Mins (e.g. 30)" min="1" class="border p-2 rounded text-xs">
             </div>
-            <button onclick="addTask()" class="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 font-bold mb-4 shadow">+ Add to Timetable</button>
+            <button onclick="addTask()" class="w-full bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-green-600 font-bold mb-4 shadow">+ Add to Timetable</button>
             
             <ul id="task-list" class="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar"></ul>
         </div>
@@ -110,7 +117,7 @@
             </div>
 
             <p id="timer-status" class="text-sm text-gray-500 mb-4">Ready to focus?</p>
-            <button onclick="startFocusSession()" id="start-btn" class="bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-700 w-full mb-4 shadow-lg">Start Session</button>
+            <button onclick="startFocusSession()" id="start-btn" class="bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:bg-green-700 w-full mb-4 shadow-lg">Start Session</button>
             <button onclick="stopFocusSession()" id="stop-btn" class="bg-red-500 text-white px-6 py-2 rounded-full font-bold hover:bg-red-600 w-full hidden shadow-lg">Stop Session</button>
 
             <div id="game-container" class="mt-6 hidden">
@@ -121,7 +128,7 @@
         </div>
 
         <div class="space-y-6 col-span-1">
-            <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="bg-white/80 p-6 rounded-lg shadow-md">
                 <h2 class="text-xl font-bold mb-4 border-b pb-2">🏆 Leaderboard</h2>
                 <ul id="leaderboard" class="space-y-3"></ul>
             </div>
@@ -136,8 +143,8 @@
     </div>
 
     <div class="container mx-auto px-4 mt-2">
-        <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-500">
-            <h2 class="text-xl font-bold mb-4">📊 Daily Productivity Report</h2>
+        <div class="bg-white/80 p-6 rounded-lg shadow-md border-t-4 border-blue-500">
+            <h2 class="text-xl font-bold mb-4">📊 Daily Performance Report </h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div class="p-4 bg-gray-50 rounded">
                     <p class="text-xs text-gray-500 uppercase">Focus Time</p>
@@ -160,7 +167,7 @@
     </div>
 
     <div id="study-vault-section" class="container mx-auto px-4 mt-6">
-        <div class="bg-white p-6 rounded-lg shadow-md flex flex-col md:flex-row gap-6">
+        <div class="bg-white/80 p-6 rounded-lg shadow-md flex flex-col md:flex-row gap-6">
             
             <div class="flex-1">
                 <h2 class="text-xl font-bold mb-2 border-b pb-2">📚 Study Vault</h2>
@@ -173,7 +180,7 @@
 
                 <div class="flex gap-4 mb-4">
                     <input type="text" id="url-input" placeholder="Enter study URL to load..." class="border p-2 rounded w-full text-sm">
-                    <button onclick="loadStudySite()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-bold whitespace-nowrap shadow">Load</button>
+                    <button onclick="loadStudySite()" class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-green-700 font-bold whitespace-nowrap shadow">Load</button>
                 </div>
                 <div id="iframe-container" class="hidden h-[500px] border-4 border-blue-100 rounded-lg overflow-hidden relative">
                     <iframe id="study-frame" class="w-full h-full" src="" allow="encrypted-media"></iframe>
@@ -190,17 +197,17 @@
                         <button onclick="fillSuggestion('spotify.com', 'https://open.spotify.com/playlist/37i9dQZF1DWWQRwui0ExPn')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
                     </li>
                     
-                    <li class="bg-white p-3 rounded shadow-sm border-l-4 border-red-500">
+                    <!-- <li class="bg-white p-3 rounded shadow-sm border-l-4 border-red-500">
                         <span class="font-bold text-gray-800 text-sm">🍎 YouTube Pomodoro</span>
                         <p class="text-[10px] text-gray-500 mt-1 mb-2">50/10 study timer with alarm.</p>
                         <button onclick="fillSuggestion('youtube.com', 'https://www.youtube.com/watch?v=COmEw4u8Rkk')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
-                    </li>
+                    </li> -->
 
-                    <li class="bg-white p-3 rounded shadow-sm border-l-4 border-gray-800">
+                    <!-- <li class="bg-white p-3 rounded shadow-sm border-l-4 border-gray-800">
                         <span class="font-bold text-gray-800 text-sm">📓 Anime OST Study</span>
                         <p class="text-[10px] text-gray-500 mt-1 mb-2">Death Note ambient soundtrack.</p>
                         <button onclick="fillSuggestion('youtube.com', 'https://www.youtube.com/watch?v=VKMWEDm5t64')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
-                    </li>
+                    </li> -->
 
                     <li class="bg-white p-3 rounded shadow-sm border-l-4 border-blue-600">
                         <span class="font-bold text-gray-800 text-sm">⚙️ C++ Reference</span>
@@ -266,6 +273,7 @@
     
         // App State
         let points = 0;
+        let gametrialsleft = 0;
         let currentUserData = null;
         let googleAccessToken = null; 
         let timerInterval;
@@ -545,7 +553,7 @@
             updateUI();
             updateDailyStats(0, 1); 
             loadTasksFromDB();
-            checkGameUnlock();
+           
         };
 
         window.setCustomTime = async () => {
@@ -714,6 +722,12 @@
                 successChime.play();
                 const pointsEarned = sessionMinutes * 2; // Original focus time dictates points
                 points += pointsEarned; 
+                // 🎮 Unlock Game With 3 Trials
+gameTrialsLeft = 3;
+
+setTimeout(() => {
+    unlockFocusGame();
+}, 500);
                 updateUI(); 
                 updateDailyStats(sessionMinutes, 0); 
                 
@@ -874,39 +888,94 @@
             } catch (e) { alert("Please enter a valid URL format."); }
         };
 
-        window.checkGameUnlock = () => { 
-            if(points >= 20) {
-                const gameContainer = document.getElementById('game-container');
-                if (gameContainer.classList.contains('hidden')) {
-                    gameContainer.classList.remove('hidden');
-                    document.getElementById('game-area').style.display = 'block';
-                    startGame();
-                }
-            } 
-        };
+        // window.checkGameUnlock = () => { 
+        //     if(points >= 20) {
+        //         const gameContainer = document.getElementById('game-container');
+        //         if (gameContainer.classList.contains('hidden')) {
+        //             gameContainer.classList.remove('hidden');
+        //             document.getElementById('game-area').style.display = 'block';
+        //             startGame();
+        //         }
+        //     } 
+        // };
 
-        function startGame() {
-            const gameArea = document.getElementById('game-area');
-            gameArea.innerHTML = ''; 
-            gameInterval = setInterval(() => {
-                const maxX = Math.max(0, (gameArea.clientWidth || 200) - 40);
-                const maxY = Math.max(0, (gameArea.clientHeight || 200) - 40);
-                const target = document.createElement('div');
-                target.className = 'target shadow-lg';
-                target.style.left = Math.floor(Math.random() * maxX) + 'px';
-                target.style.top = Math.floor(Math.random() * maxY) + 'px';
+        // function startGame() {
+        //     const gameArea = document.getElementById('game-area');
+        //     gameArea.innerHTML = ''; 
+        //     gameInterval = setInterval(() => {
+        //         const maxX = Math.max(0, (gameArea.clientWidth || 200) - 40);
+        //         const maxY = Math.max(0, (gameArea.clientHeight || 200) - 40);
+        //         const target = document.createElement('div');
+        //         target.className = 'target shadow-lg';
+        //         target.style.left = Math.floor(Math.random() * maxX) + 'px';
+        //         target.style.top = Math.floor(Math.random() * maxY) + 'px';
                 
-                target.onclick = () => { target.remove(); points += 2; updateUI(); };
-                gameArea.appendChild(target);
-                setTimeout(() => { if (target.parentElement) target.remove(); }, 1500);
-            }, 1000); 
+        //         target.onclick = () => { target.remove(); points += 2; updateUI(); };
+        //         gameArea.appendChild(target);
+        //         setTimeout(() => { if (target.parentElement) target.remove(); }, 1500);
+        //     }, 1000); 
+        // }
+
+    function startGame() {
+    const gameArea = document.getElementById('game-area');
+    gameArea.innerHTML = ''; 
+    
+    gameInterval = setInterval(() => {
+
+        if (gameTrialsLeft <= 0) {
+            clearInterval(gameInterval);
+            closeGame();
+            alert("🎮 Trials finished! Complete another focus session.");
+            return;
         }
 
+        const maxX = Math.max(0, (gameArea.clientWidth || 200) - 40);
+        const maxY = Math.max(0, (gameArea.clientHeight || 200) - 40);
+
+        const target = document.createElement('div');
+        target.className = 'target shadow-lg';
+
+        target.style.left = Math.floor(Math.random() * maxX) + 'px';
+        target.style.top = Math.floor(Math.random() * maxY) + 'px';
+
+        target.onclick = () => {
+            target.remove();
+            points += 2;
+            gameTrialsLeft--;
+            updateUI();
+
+            alert(`🎯 Nice! Trials left: ${gameTrialsLeft}`);
+
+            if (gameTrialsLeft <= 0) {
+                clearInterval(gameInterval);
+                closeGame();
+                alert("🎮 All trials used! Complete another focus session.");
+            }
+        };
+
+        gameArea.appendChild(target);
+
+        setTimeout(() => {
+            if (target.parentElement) target.remove();
+        }, 1500);
+
+    }, 1000);
+}
         window.closeGame = () => {
             document.getElementById('game-container').classList.add('hidden');
             document.getElementById('game-area').style.display = 'none';
             clearInterval(gameInterval); 
         };
+        
+        function unlockFocusGame() {
+    if (gameTrialsLeft > 0) {
+        const gameContainer = document.getElementById('game-container');
+        gameContainer.classList.remove('hidden');
+        document.getElementById('game-area').style.display = 'block';
+        startGame();
+        alert("🎮 Focus Reward Unlocked! You have 3 trials.");
+    }
+}
 
         window.stopFocusSession = () => endSession(false);
     </script>

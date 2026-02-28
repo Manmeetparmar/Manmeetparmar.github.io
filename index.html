@@ -184,8 +184,8 @@
         let googleAccessToken = null; 
         let timerInterval;
         let gameInterval;
-        let reminderInterval; // 🌟 NEW: Tracks our idle reminder loop
-        let hasNotifiedPriority = false; // Prevents spamming high-priority alerts
+        let reminderInterval; 
+        let hasNotifiedPriority = false; 
         
         let sessionMinutes = 25; 
         let timeLeft = sessionMinutes * 60; 
@@ -200,7 +200,7 @@
         function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
         function getYesterdayString() { const d = new Date(); d.setDate(d.getDate() - 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 
-        // 🌟 NEW: Notification System Helpers (FR-25 & FR-26)
+        // Notifications
         function requestNotificationPermission() {
             if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
                 Notification.requestPermission();
@@ -214,8 +214,6 @@
         }
 
         function startIdleReminderLoop() {
-            // Check every 5 minutes (300,000 ms) if they need a nudge
-            // For hackathon demo purposes, you can change this to 30000 (30 seconds) to show the judges!
             reminderInterval = setInterval(() => {
                 if (!isFocusing && currentUserData) {
                     sendAppNotification("⏱️ Session Reminder", "You have tasks waiting! Start a Focus Session now.");
@@ -232,7 +230,6 @@
                 document.getElementById('referral-card').classList.remove('hidden');
                 document.getElementById('user-name').innerText = user.displayName.split(" ")[0];
                 
-                // Ask for notification permissions on login
                 requestNotificationPermission();
                 startIdleReminderLoop();
 
@@ -274,7 +271,7 @@
                 loadUserStats(); 
             } else {
                 currentUserData = null;
-                clearInterval(reminderInterval); // Stop reminders when logged out
+                clearInterval(reminderInterval);
                 document.getElementById('logged-in-view').classList.add('hidden');
                 document.getElementById('logged-out-view').classList.remove('hidden');
                 document.getElementById('referral-card').classList.add('hidden');
@@ -429,12 +426,11 @@
 
             tasks.sort((a, b) => b.priority - a.priority);
 
-            // 🌟 NEW: High Priority Task Alert (FR-26)
             if (!hasNotifiedPriority && tasks.some(t => t.priority === 3)) {
                 sendAppNotification("🚨 High Priority Alert!", "You have red-tier tasks waiting. Focus on these first.");
-                hasNotifiedPriority = true; // Prevent spamming this alert on every reload
+                hasNotifiedPriority = true; 
             } else if (!tasks.some(t => t.priority === 3)) {
-                hasNotifiedPriority = false; // Reset if they clear all high priority tasks
+                hasNotifiedPriority = false; 
             }
 
             tasks.forEach(t => {
@@ -554,7 +550,7 @@
             });
         }
 
-        // --- STUDY VAULT (WHITELIST LOGIC) ---
+        // --- STUDY VAULT (WITH SMART YOUTUBE EMBEDDING) ---
         window.addToWhitelist = async () => {
             if (!currentUserData) return alert("Please log in first!");
             let rawInput = document.getElementById('whitelist-input').value.trim().toLowerCase();
@@ -576,13 +572,48 @@
             if (!urlStr.startsWith("http")) urlStr = "https://" + urlStr; 
 
             try {
-                const requestedDomain = new URL(urlStr).hostname.replace('www.', '');
+                const parsedUrl = new URL(urlStr);
+                const requestedDomain = parsedUrl.hostname.replace('www.', '');
+
+                // Verify domain is on whitelist
                 if (!whitelist.some(approvedSite => requestedDomain.endsWith(approvedSite))) {
                     return alert(`🛑 Access Denied! \n\n"${requestedDomain}" is not on your approved study list.`); 
                 }
-                document.getElementById('iframe-container').classList.remove('hidden');
-                document.getElementById('study-frame').src = `https://corsproxy.io/?${encodeURIComponent(urlStr)}`;
-            } catch (e) { alert("Please enter a valid URL format."); }
+
+                const iframeContainer = document.getElementById('iframe-container');
+                const studyFrame = document.getElementById('study-frame');
+                let finalUrl = "";
+
+                // 🌟 SMART YOUTUBE ROUTING: No proxy needed!
+                if (requestedDomain.includes('youtube.com') || requestedDomain.includes('youtu.be')) {
+                    let videoId = "";
+                    
+                    // Extract the specific video ID from the link
+                    if (urlStr.includes('watch?v=')) {
+                        videoId = parsedUrl.searchParams.get('v');
+                    } else if (urlStr.includes('youtu.be/')) {
+                        videoId = parsedUrl.pathname.substring(1);
+                    }
+
+                    if (videoId) {
+                        // Use YouTube's official, unblockable embed format
+                        finalUrl = `https://www.youtube.com/embed/${videoId}`;
+                    } else {
+                        return alert("Please paste a link to a specific YouTube video, not the homepage.");
+                    }
+                } 
+                // 🌟 REGULAR SITES (Wikipedia, etc.)
+                else {
+                    // Using allorigins since corsproxy is currently down
+                    finalUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlStr)}`;
+                }
+
+                iframeContainer.classList.remove('hidden');
+                studyFrame.src = finalUrl;
+
+            } catch (e) { 
+                alert("Please enter a valid URL format."); 
+            }
         };
 
         // --- REWARD GAME LOGIC ---

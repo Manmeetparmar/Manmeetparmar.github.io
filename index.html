@@ -584,11 +584,18 @@
             const q = query(collection(db, "leaderboard"), orderBy("score", "desc"), limit(5));
             const snap = await getDocs(q);
             list.innerHTML = "";
-            snap.forEach((d, i) => {
+            
+            let rank = 1; // 🌟 NEW: Create our own rank counter
+            
+            snap.forEach((d) => { // Removed the 'i' from here
                 const li = document.createElement('li');
                 li.className = `flex justify-between p-2 rounded ${currentUserData && d.id === currentUserData.uid ? 'bg-blue-100 font-bold' : 'bg-gray-50'}`;
-                li.innerHTML = `<span>#${i+1} ${d.data().name}</span><span>${d.data().score}</span>`;
+                
+                // Use our manual 'rank' variable instead of 'i+1'
+                li.innerHTML = `<span>#${rank} ${d.data().name}</span><span>${d.data().score}</span>`;
+                
                 list.appendChild(li);
+                rank++; // 🌟 NEW: Increase the rank for the next person
             });
         }
 

@@ -32,9 +32,16 @@
     </nav>
 
     <div id="hero-timer" class="hidden w-full h-screen bg-cover bg-center flex flex-col justify-center items-center relative text-white" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('image_8f371d.jpg'); background-attachment: fixed;">
-        <h2 class="text-4xl md:text-5xl font-bold mb-4 z-10 tracking-wider text-blue-200">⏱️ FOCUS MODE</h2>
-        <div id="hero-timer-display" class="text-8xl md:text-[12rem] font-mono font-bold mb-6 z-10 drop-shadow-2xl text-white">25:00</div>
-        <p id="hero-timer-status" class="text-2xl md:text-3xl mb-12 z-10 font-medium text-gray-200">💪 Focus Time! Stay on this screen.</p>
+        <!-- VIDEO BACKGROUND -->
+    <video id="video-video" class="absolute top-0 left-0 w-full h-full object-cover z-0" muted loop>
+        <source src="video.mp4" type="video/mp4">
+    </video>
+
+    <!-- DARK OVERLAY -->
+    <div class="absolute inset-0 bg-black bg-opacity-50 z-0"></div>
+        <h2 class="relative z-10 text-4xl md:text-5xl font-bold mb-4 tracking-wider text-blue-200">⏱️ FOCUS MODE</h2>
+        <div id="hero-timer-display" class="relative z-10 text-8xl md:text-[12rem] font-mono font-bold mb-6 drop-shadow-2xl text-white">25:00</div>
+        <p id="hero-timer-status" class="relative z-10 text-2xl md:text-3xl mb-12 font-medium text-gray-200">💪 Focus Time! Stay on this screen.</p>
         
         <div class="z-10 flex flex-col md:flex-row gap-6">
             <button onclick="stopFocusSession()" id="hero-stop-btn" class="bg-red-500 text-white px-10 py-4 rounded-full font-bold hover:bg-red-600 text-xl shadow-[0_0_20px_rgba(239,68,68,0.5)] transition transform hover:scale-105">Stop Session</button>
@@ -594,6 +601,10 @@
 
             // Reveal Full-Screen Hero & Scroll to top
             document.getElementById('hero-timer').classList.remove('hidden');
+            // ▶️ Play video
+const video = document.getElementById('video-video');
+video.currentTime = 0;
+video.play();
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
             try {
@@ -681,6 +692,10 @@
         }
 
         function endSession(success) {
+            // ⏹ Stop video
+const video = document.getElementById('video-video');
+video.pause();
+video.currentTime = 0;
             clearInterval(timerInterval);
             isFocusing = false;
             isBreakTime = false;

@@ -870,25 +870,28 @@
                 // 🎧 CORRECT REAL SPOTIFY ROUTING 🎧
                 else if (requestedDomain.includes('spotify.com')) {
 
-// Exit fullscreen to prevent Spotify crash
-if (document.fullscreenElement) {
-    document.exitFullscreen().catch(()=>{});
+const match = parsedUrl.pathname.match(
+    /(playlist|track|album|episode|show)\/([a-zA-Z0-9]+)/
+);
+
+if (!match) {
+    return alert(
+        "Paste a Spotify playlist, track, album or podcast link."
+    );
 }
 
-if (
-    parsedUrl.pathname.includes('/playlist/') ||
-    parsedUrl.pathname.includes('/track/') ||
-    parsedUrl.pathname.includes('/album/') ||
-    parsedUrl.pathname.includes('/show/') ||
-    parsedUrl.pathname.includes('/episode/')
-) {
+const type = match[1];
+const id = match[2];
 
-    // Preserve Spotify parameters
-    finalUrl =
-        "https://open.spotify.com/embed" +
-        parsedUrl.pathname +
-        parsedUrl.search;
+finalUrl = `https://open.spotify.com/embed/${type}/${id}`;
 
+// Important: delay iframe load slightly
+setTimeout(() => {
+    studyFrame.src = finalUrl;
+}, 100);
+
+iframeContainer.classList.remove('hidden');
+return;
 } else {
     return alert(
         "Paste a Spotify playlist, track, album or podcast link."

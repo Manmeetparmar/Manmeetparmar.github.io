@@ -682,11 +682,10 @@
                     if (videoId) { finalUrl = `https://www.youtube.com/embed/${videoId}`; } 
                     else { return alert("Please paste a link to a specific YouTube video, not the homepage."); }
                 } 
-                // 🎧 SPOTIFY ROUTING
-                // 🎧 SPOTIFY ROUTING
+                // 🎧 CORRECT SPOTIFY ROUTING 🎧
                 else if (requestedDomain.includes('spotify.com')) {
                     if (parsedUrl.pathname.includes('/playlist/') || parsedUrl.pathname.includes('/track/') || parsedUrl.pathname.includes('/album/') || parsedUrl.pathname.includes('/show/')) {
-                        // Use Spotify's official embed URL format
+                        // Use Spotify's official embed URL format cleanly
                         finalUrl = "https://open.spotify.com/embed" + parsedUrl.pathname;
                     } else {
                         return alert("Please paste a direct link to a specific Spotify playlist, track, or album.");

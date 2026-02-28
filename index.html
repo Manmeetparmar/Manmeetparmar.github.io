@@ -165,7 +165,7 @@
             <div class="flex-1">
                 <h2 class="text-xl font-bold mb-2 border-b pb-2">📚 Study Vault</h2>
                 
-                <p class="text-xs text-gray-500 mb-2">Approved: <span id="approved-list" class="font-mono text-blue-600 font-bold">wikipedia.org, w3schools.com, open.spotify.com</span></p>
+                <p class="text-xs text-gray-500 mb-2">Approved: <span id="approved-list" class="font-mono text-blue-600 font-bold">wikipedia.org, w3schools.com, spotify.com</span></p>
                 <div class="flex gap-2 mb-4">
                     <input type="text" id="whitelist-input" placeholder="Add domain (e.g. khanacademy.org)" class="border p-2 rounded w-1/3 text-xs bg-gray-50">
                     <button onclick="addToWhitelist()" class="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 font-bold text-xs">+ Add Safe Site</button>
@@ -187,7 +187,7 @@
                     <li class="bg-white p-3 rounded shadow-sm border-l-4 border-green-500">
                         <span class="font-bold text-gray-800 text-sm">🟢 Spotify Lofi</span>
                         <p class="text-[10px] text-gray-500 mt-1 mb-2">Chill beats to focus to.</p>
-                        <button onclick="fillSuggestion('open.spotify.com', 'https://open.spotify.com/playlist/0vvXsWCC9xrXsKd4Zsnw0V')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
+                        <button onclick="fillSuggestion('spotify.com', 'https://open.spotify.com/playlist/0vvXsWCC9xrXsKd4Zsnw0V')" class="w-full bg-blue-100 text-blue-700 py-1 rounded font-bold hover:bg-blue-200 transition">Auto-Fill & Load</button>
                     </li>
                     
                     <li class="bg-white p-3 rounded shadow-sm border-l-4 border-red-500">
@@ -290,7 +290,7 @@
         let userStreak = 0;
         let lastSessionDate = null;
         let currentLevel = 1; 
-        let whitelist = ["wikipedia.org", "w3schools.com", "open.spotify.com", "spotify.com"];
+        let whitelist = ["wikipedia.org", "w3schools.com", "spotify.com", "youtube.com", "cppreference.com", "codeforces.com", "developer.mozilla.org"];
 
         function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
         function getYesterdayString() { const d = new Date(); d.setDate(d.getDate() - 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
@@ -854,7 +854,7 @@
                 } 
                 
                 // 🎧 CORRECT SPOTIFY ROUTING 🎧
-                else if (requestedDomain.includes('spotify.com') || requestedDomain.includes('open.spotify.com')) {
+                else if (requestedDomain.includes('spotify.com')) {
                     if (parsedUrl.pathname.includes('/playlist/') || parsedUrl.pathname.includes('/track/') || parsedUrl.pathname.includes('/album/') || parsedUrl.pathname.includes('/show/')) {
                         // Use Spotify's official embed URL format cleanly
                         finalUrl = "https://open.spotify.com/embed" + parsedUrl.pathname;
